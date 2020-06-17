@@ -21,4 +21,4 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        run: npm run deploy -- --user "asurance@qq.com"
+        run: npm run deploy -- --user "asurance <784672616@qq.com>"
