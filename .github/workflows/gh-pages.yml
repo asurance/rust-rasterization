@@ -25,5 +25,5 @@ jobs:
           git config user.name asurance
           git config user.email 784672616@qq.com
           npm run deploy
-          if git diff --exit-code;then echo "there's nothing to commit";else git add -A;git commit -am "auto commit";git pull --rebase;git push origin master;fi
+          git push origin gh-pages
 
