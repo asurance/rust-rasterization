@@ -11,19 +11,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Test Env
+      - name: Install
+        run: npm install
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy
         run: |
-          rustc --version
-          cargo --version
-          wasm-pack --version
-
-      # - name: Install
-      #   run: npm install
-
-      # - name: Build
-      #   run: npm run build
-
-      # - name: Deploy
-      #   run: |
-      #     git config user.name ${{github.actor}}
-      #     npm run deploy
+          git config user.name ${{github.actor}}
+          npm run deploy
