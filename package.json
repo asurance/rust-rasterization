@@ -7,7 +7,7 @@
         "build": "rimraf dist pkg && cross-env TS_NODE_PROJECT=\"config/tsconfig.json\" webpack --config config/webpack.prod.config.ts",
         "start": "rimraf dist pkg && cross-env TS_NODE_PROJECT=\"config/tsconfig.json\" webpack-dev-server --progress --config config/webpack.dev.config.ts",
         "test": "cargo test && wasm-pack test --headless",
-        "deploy": "gh-pages -d dist"
+        "deploy": "gh-pages -d dist --no-push"
     },
     "repository": {
         "type": "git",

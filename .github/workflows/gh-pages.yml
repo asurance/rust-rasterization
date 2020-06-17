@@ -22,4 +22,7 @@ jobs:
 
       - name: Deploy
         run: |
-          npm run deploy -- --user "asurance <784672616@qq.com>" --repo git@github.com:asurance/rust-rasterization.git
+          npm run deploy
+          git config user.name ${{github.actor}}
+          if git diff --exit-code;then echo "there's nothing to commit";else git add -A;git commit -am "auto commit";git pull --rebase;git push origin master;fi
+
