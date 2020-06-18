@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
-use crate::mesh::Mesh;
+use crate::mesh::{IMesh, Mesh};
 
 #[wasm_bindgen]
 pub struct Context {
@@ -35,7 +35,7 @@ impl Context {
     }
 
     #[wasm_bindgen(js_name=drawMesh)]
-    pub fn draw_mesh(&self, value: &JsValue, color: &str) {
+    pub fn draw_mesh(&self, value: IMesh, color: &str) {
         let out = value.into_serde::<Mesh>().unwrap();
         self.ctx.set_fill_style(&JsValue::from(color));
         let position = out.position;
