@@ -5,9 +5,9 @@
     "main": "index.js",
     "scripts": {
         "build": "rimraf dist pkg && cross-env TS_NODE_PROJECT=\"config/tsconfig.json\" webpack --config config/webpack.prod.config.ts",
-        "start": "rimraf dist pkg && cross-env TS_NODE_PROJECT=\"config/tsconfig.json\" webpack-dev-server --progress --config config/webpack.dev.config.ts",
+        "start": "cross-env TS_NODE_PROJECT=\"config/tsconfig.json\" webpack-dev-server --progress --config config/webpack.dev.config.ts",
         "test": "cargo test && wasm-pack test --headless",
-        "deploy": "gh-pages -d dist --no-push"
+        "build:pkg": "wasm-pack build --out-name index"
     },
     "repository": {
         "type": "git",

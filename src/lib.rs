@@ -1,17 +1,11 @@
-use wasm_bindgen::prelude::*;
+mod context;
+mod mesh;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
+#[macro_use]
+extern crate serde_derive;
+
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen(start)]
-pub fn greet() {
-    alert("Hello, rust-rasterization!");
-}
+pub use context::Context;
