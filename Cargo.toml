@@ -1,5 +1,5 @@
 [package]
-name = "rust-rasterization"
+name = "rust_rasterization"
 version = "0.0.0"
 authors = ["asurance <784672616@qq.com>"]
 edition = "2018"
@@ -16,15 +16,21 @@ default = ["wee_alloc"]
 [dependencies]
 serde = "^1.0.59"
 serde_derive = "^1.0.59"
-wee_alloc = { version = "0.4.5", optional = true }
+js-sys = "^0.3.40"
+wee_alloc = { version = "^0.4.5", optional = true }
 
 [dependencies.wasm-bindgen]
 version = "^0.2"
 features = ["serde-serialize"]
 
 [dependencies.web-sys]
-version = "0.3.4"
-features = ['CanvasRenderingContext2d', 'HtmlCanvasElement']
+version = "^0.3.4"
+features = [
+    'CanvasRenderingContext2d',
+    'HtmlCanvasElement',
+    'ImageData',
+    'HtmlImageElement'
+]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"
