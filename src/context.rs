@@ -1,9 +1,8 @@
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-
 use crate::mesh::{IMesh, Mesh};
 use crate::util::lerp;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
+use wasm_bindgen::JsCast;
 use web_sys::ImageData;
 
 #[wasm_bindgen]
@@ -60,44 +59,41 @@ impl Context {
     }
 
     fn draw_triangle(&mut self, points: [(f64, f64); 3]) {
-        let mut flag = true;
         for i in 0..3 {
             if points[i].1 == points[(i + 1) % 3].1 {
                 self.draw_horizen_triangle(
                     points[(i + 2) % 3],
                     points[i].0,
-                    points[(i + 1) % 3].1,
-                    points[i].0,
+                    points[(i + 1) % 3].0,
+                    points[i].1,
                 );
-                flag = false;
+                return;
             }
         }
-        if flag {
-            let mut max = points[0].1;
-            let mut maxi = 0;
-            let mut min = points[0].1;
-            let mut mini = 0;
-            for i in 1..3 {
-                if max < points[i].1 {
-                    max = points[i].1;
-                    maxi = i;
-                }
-                if min > points[i].1 {
-                    min = points[i].1;
-                    mini = i;
-                }
+        let mut max = points[0].1;
+        let mut maxi = 0;
+        let mut min = points[0].1;
+        let mut mini = 0;
+        for i in 1..3 {
+            if max < points[i].1 {
+                max = points[i].1;
+                maxi = i;
             }
-            let midi = 3 - maxi - mini;
-            let mid = lerp(
-                points[mini].0,
-                points[maxi].0,
-                points[mini].1,
-                points[maxi].1,
-                points[midi].1,
-            );
-            self.draw_horizen_triangle(points[mini], points[midi].0, mid, points[midi].1);
-            self.draw_horizen_triangle(points[maxi], points[midi].0, mid, points[midi].1);
+            if min > points[i].1 {
+                min = points[i].1;
+                mini = i;
+            }
         }
+        let midi = 3 - maxi - mini;
+        let mid = lerp(
+            points[mini].0,
+            points[maxi].0,
+            points[mini].1,
+            points[maxi].1,
+            points[midi].1,
+        );
+        self.draw_horizen_triangle(points[mini], points[midi].0, mid, points[midi].1);
+        self.draw_horizen_triangle(points[maxi], points[midi].0, mid, points[midi].1);
     }
 
     fn draw_horizen_triangle(&mut self, point: (f64, f64), x1: f64, x2: f64, y: f64) {
@@ -105,7 +101,7 @@ impl Context {
         let point_y = (point.1 + 0.5) as i32;
         let line_y = (y + 0.5) as i32;
         if point_x >= 0 && point_y >= 0 {
-            self.draw_point(point_y as u32, point_x as u32)
+            self.draw_point(point_x as u32, point_y as u32)
         }
         let (start, end) = if point_y < line_y {
             (point_y + 1, line_y)
@@ -127,7 +123,7 @@ impl Context {
         let (start, end) = if x1 < x2 {
             (x1 as i32, x2 as i32)
         } else {
-            (x1 as i32, x2 as i32)
+            (x2 as i32, x1 as i32)
         };
         let mut i = if start > 0 { start as u32 } else { 0 };
         while (i as i32) < end + 1 && i < self.canvas_width {
@@ -136,7 +132,7 @@ impl Context {
         }
     }
 
-    fn draw_point(&mut self, row: u32, col: u32) {
+    fn draw_point(&mut self, col: u32, row: u32) {
         self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = 0;
         self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = 0;
         self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = 0;

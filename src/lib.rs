@@ -1,6 +1,5 @@
 mod context;
 mod mesh;
-mod vector;
 mod util;
 
 #[macro_use]
