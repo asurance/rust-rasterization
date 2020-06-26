@@ -3,6 +3,7 @@ use crate::util::lerp;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use wasm_bindgen::JsCast;
+// use web_sys::console;
 use web_sys::ImageData;
 
 #[wasm_bindgen]
@@ -31,17 +32,24 @@ impl Context {
         }
     }
 
-    #[wasm_bindgen(js_name=clearWithColor)]
-    pub fn clear_with_color(&self, color: &str) {
-        self.ctx.set_fill_style(&JsValue::from(color));
-        self.ctx
-            .fill_rect(0., 0., self.canvas_width as f64, self.canvas_height as f64);
+    #[wasm_bindgen(js_name=clearColor)]
+    pub fn clear_color(&mut self, color: u32) {
+        let red = (color >> 16) as u8;
+        let green = ((color >> 8) & 0xFF) as u8;
+        let blue = (color & 0xFF) as u8;
+        for row in 0..self.canvas_height {
+            for col in 0..self.canvas_width {
+                self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = red;
+                self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = green;
+                self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = blue;
+                self.render_buffer[((row * self.canvas_width + col) * 4 + 3) as usize] = 255;
+            }
+        }
     }
 
     #[wasm_bindgen(js_name=drawMesh)]
-    pub fn draw_mesh(&mut self, value: IMesh, color: &str) -> Result<(), JsValue> {
+    pub fn draw_mesh(&mut self, value: IMesh) {
         let value = value.into_serde::<Mesh>().unwrap();
-        self.ctx.set_fill_style(&JsValue::from(color));
         let position = value.position;
         if position.len() >= 6 {
             self.draw_triangle([
@@ -50,6 +58,9 @@ impl Context {
                 (position[4], position[5]),
             ])
         }
+    }
+
+    pub fn finish(&mut self) -> Result<(), JsValue> {
         let data = ImageData::new_with_u8_clamped_array_and_sh(
             Clamped(&mut self.render_buffer),
             self.canvas_width,
@@ -100,7 +111,11 @@ impl Context {
         let point_x = (point.0 + 0.5) as i32;
         let point_y = (point.1 + 0.5) as i32;
         let line_y = (y + 0.5) as i32;
-        if point_x >= 0 && point_y >= 0 {
+        if point_x >= 0
+            && point_y >= 0
+            && (point_x as u32) < self.canvas_width
+            && (point_y as u32) < self.canvas_height
+        {
             self.draw_point(point_x as u32, point_y as u32)
         }
         let (start, end) = if point_y < line_y {

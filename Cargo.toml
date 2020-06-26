@@ -29,7 +29,8 @@ features = [
     'CanvasRenderingContext2d',
     'HtmlCanvasElement',
     'ImageData',
-    'HtmlImageElement'
+    'HtmlImageElement',
+    'console',
 ]
 
 [dev-dependencies]
