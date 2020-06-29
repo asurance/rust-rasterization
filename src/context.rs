@@ -12,6 +12,7 @@ pub struct Context {
     canvas_width: u32,
     canvas_height: u32,
     render_buffer: Vec<u8>,
+    depth_buffer: Vec<f64>,
 }
 
 #[wasm_bindgen]
@@ -29,6 +30,7 @@ impl Context {
             canvas_width: canvas.width(),
             canvas_height: canvas.height(),
             render_buffer: vec![0; (canvas.width() * canvas.height() * 4) as usize],
+            depth_buffer: vec![0.; (canvas.width() * canvas.height()) as usize],
         }
     }
 
@@ -47,6 +49,15 @@ impl Context {
         }
     }
 
+    #[wasm_bindgen(js_name=clearDepth)]
+    pub fn clear_depth(&mut self, depth: f64) {
+        for row in 0..self.canvas_height {
+            for col in 0..self.canvas_width {
+                self.depth_buffer[(row * self.canvas_width + col) as usize] = depth;
+            }
+        }
+    }
+
     #[wasm_bindgen(js_name=drawMesh)]
     pub fn draw_mesh(&mut self, value: IMesh) {
         let value = value.into_serde::<Mesh>().unwrap();
@@ -60,6 +71,7 @@ impl Context {
         }
     }
 
+    #[wasm_bindgen(js_name=finish)]
     pub fn finish(&mut self) -> Result<(), JsValue> {
         let data = ImageData::new_with_u8_clamped_array_and_sh(
             Clamped(&mut self.render_buffer),

@@ -11,6 +11,6 @@ pub fn lerp(from: f64, to: f64, start: f64, end: f64, target: f64) -> f64 {
     from + (to - from) * ratio
 }
 
-pub fn SFunction(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {
+pub fn s_function(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {
     a.0 * b.1 + b.0 * c.1 + c.0 * a.1 - a.0 * c.1 - b.0 * a.1 - c.0 * b.1
 }
