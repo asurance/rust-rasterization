@@ -2,6 +2,7 @@ mod context;
 mod mesh;
 mod util;
 mod texture;
+mod render_object;
 
 #[macro_use]
 extern crate serde_derive;

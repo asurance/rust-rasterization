@@ -15,10 +15,10 @@ impl Texture {
         }
     }
 
-    pub fn texture_2d(self, uv: (f64, f64)) -> (u8, u8, u8, u8) {
+    pub fn texture_2d(&self, uv: (f64, f64)) -> (u8, u8, u8, u8) {
         let u = (util::clamp_to_01(uv.0) * ((self.width - 1) as f64) + 0.5) as u32;
         let v = (util::clamp_to_01(uv.1) * ((self.height - 1) as f64) + 0.5) as u32;
-        let i = (u * self.width + v) as usize * 4;
+        let i = (v * self.width + u) as usize * 4;
         (
             self.data[i],
             self.data[i + 1],

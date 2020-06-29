@@ -1,4 +1,6 @@
 use crate::mesh::{IMesh, Mesh};
+use crate::render_object::RenderObject;
+use crate::texture::Texture;
 use crate::util::lerp;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
@@ -59,15 +61,23 @@ impl Context {
     }
 
     #[wasm_bindgen(js_name=drawMesh)]
-    pub fn draw_mesh(&mut self, value: IMesh) {
+    pub fn draw_mesh(&mut self, value: IMesh, image: web_sys::ImageData) {
         let value = value.into_serde::<Mesh>().unwrap();
-        let position = value.position;
-        if position.len() >= 6 {
-            self.draw_triangle([
-                (position[0], position[1]),
-                (position[2], position[3]),
-                (position[4], position[5]),
-            ])
+        let pointcount = value.position.len() / 6;
+        let texture = Texture::new(image);
+        for i in 0..pointcount {
+            let positions = [
+                (value.position[i * 6], value.position[i * 6 + 1]),
+                (value.position[i * 6 + 2], value.position[i * 6 + 3]),
+                (value.position[i * 6 + 4], value.position[i * 6 + 5]),
+            ];
+            let uvs = [
+                (value.uv[i * 6], value.uv[i * 6 + 1]),
+                (value.uv[i * 6 + 2], value.uv[i * 6 + 3]),
+                (value.uv[i * 6 + 4], value.uv[i * 6 + 5]),
+            ];
+            let render_object = RenderObject::new(positions, uvs, &texture);
+            self.draw_triangle(positions, &render_object);
         }
     }
 
@@ -81,7 +91,7 @@ impl Context {
         self.ctx.put_image_data(&data, 0., 0.)
     }
 
-    fn draw_triangle(&mut self, points: [(f64, f64); 3]) {
+    fn draw_triangle(&mut self, points: [(f64, f64); 3], renderobject: &RenderObject) {
         for i in 0..3 {
             if points[i].1 == points[(i + 1) % 3].1 {
                 self.draw_horizen_triangle(
@@ -89,6 +99,7 @@ impl Context {
                     points[i].0,
                     points[(i + 1) % 3].0,
                     points[i].1,
+                    renderobject,
                 );
                 return;
             }
@@ -115,11 +126,30 @@ impl Context {
             points[maxi].1,
             points[midi].1,
         );
-        self.draw_horizen_triangle(points[mini], points[midi].0, mid, points[midi].1);
-        self.draw_horizen_triangle(points[maxi], points[midi].0, mid, points[midi].1);
+        self.draw_horizen_triangle(
+            points[mini],
+            points[midi].0,
+            mid,
+            points[midi].1,
+            renderobject,
+        );
+        self.draw_horizen_triangle(
+            points[maxi],
+            points[midi].0,
+            mid,
+            points[midi].1,
+            renderobject,
+        );
     }
 
-    fn draw_horizen_triangle(&mut self, point: (f64, f64), x1: f64, x2: f64, y: f64) {
+    fn draw_horizen_triangle(
+        &mut self,
+        point: (f64, f64),
+        x1: f64,
+        x2: f64,
+        y: f64,
+        renderobject: &RenderObject,
+    ) {
         let point_x = (point.0 + 0.5) as i32;
         let point_y = (point.1 + 0.5) as i32;
         let line_y = (y + 0.5) as i32;
@@ -128,7 +158,7 @@ impl Context {
             && (point_x as u32) < self.canvas_width
             && (point_y as u32) < self.canvas_height
         {
-            self.draw_point(point_x as u32, point_y as u32)
+            self.draw_point(point_x as u32, point_y as u32, renderobject)
         }
         let (start, end) = if point_y < line_y {
             (point_y + 1, line_y)
@@ -141,12 +171,13 @@ impl Context {
                 lerp(point.0, x1, point.1, y, i as f64),
                 lerp(point.0, x2, point.1, y, i as f64),
                 i,
+                renderobject,
             );
             i += 1
         }
     }
 
-    fn draw_horizenline(&mut self, x1: f64, x2: f64, y: u32) {
+    fn draw_horizenline(&mut self, x1: f64, x2: f64, y: u32, renderobject: &RenderObject) {
         let (start, end) = if x1 < x2 {
             (x1 as i32, x2 as i32)
         } else {
@@ -154,15 +185,16 @@ impl Context {
         };
         let mut i = if start > 0 { start as u32 } else { 0 };
         while (i as i32) < end + 1 && i < self.canvas_width {
-            self.draw_point(i, y);
+            self.draw_point(i, y, renderobject);
             i += 1;
         }
     }
 
-    fn draw_point(&mut self, col: u32, row: u32) {
-        self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = 0;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = 0;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = 0;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 3) as usize] = 255;
+    fn draw_point(&mut self, col: u32, row: u32, renderobject: &RenderObject) {
+        let (r, g, b, a) = renderobject.tex((col as f64 + 0.5, row as f64 + 0.5));
+        self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = r;
+        self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = g;
+        self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = b;
+        self.render_buffer[((row * self.canvas_width + col) * 4 + 3) as usize] = a;
     }
 }

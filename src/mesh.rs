@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 const MESH_DECLARATION: &'static str = r#"
 export interface IMesh{
     position:number[];
+    uv:number[];
 }"#;
 
 #[wasm_bindgen]
@@ -14,4 +15,5 @@ extern "C" {
 #[derive(Deserialize)]
 pub struct Mesh {
     pub position: Vec<f64>,
+    pub uv: Vec<f64>,
 }
