@@ -15,7 +15,7 @@ const config = {
                 exclude: /[\\/]node_modules[\\/]/
             },
             {
-                test: /.png$/,
+                test: /\.png$/,
                 use: 'url-loader'
             }
         ]
