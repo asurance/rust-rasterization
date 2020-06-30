@@ -62,22 +62,46 @@ impl Context {
 
     #[wasm_bindgen(js_name=drawMesh)]
     pub fn draw_mesh(&mut self, value: IMesh, image: web_sys::ImageData) {
-        let value = value.into_serde::<Mesh>().unwrap();
-        let pointcount = value.position.len() / 6;
+        let mut value = value.into_serde::<Mesh>().unwrap();
+        value.transform(self.canvas_width as f64, self.canvas_height as f64);
+        let triangle_count = value.indice.len() / 3;
         let texture = Texture::new(image);
-        for i in 0..pointcount {
+        for i in 0..triangle_count {
             let positions = [
-                (value.position[i * 6], value.position[i * 6 + 1]),
-                (value.position[i * 6 + 2], value.position[i * 6 + 3]),
-                (value.position[i * 6 + 4], value.position[i * 6 + 5]),
+                (
+                    value.position[value.indice[i * 3] as usize * 3],
+                    value.position[value.indice[i * 3] as usize * 3 + 1],
+                ),
+                (
+                    value.position[value.indice[i * 3 + 1] as usize * 3],
+                    value.position[value.indice[i * 3 + 1] as usize * 3 + 1],
+                ),
+                (
+                    value.position[value.indice[i * 3 + 2] as usize * 3],
+                    value.position[value.indice[i * 3 + 2] as usize * 3 + 1],
+                ),
+            ];
+            let zs = [
+                value.position[value.indice[i * 3] as usize * 3 + 2],
+                value.position[value.indice[i * 3 + 1] as usize * 3 + 2],
+                value.position[value.indice[i * 3 + 2] as usize * 3 + 2],
             ];
             let uvs = [
-                (value.uv[i * 6], value.uv[i * 6 + 1]),
-                (value.uv[i * 6 + 2], value.uv[i * 6 + 3]),
-                (value.uv[i * 6 + 4], value.uv[i * 6 + 5]),
+                (
+                    value.uv[value.indice[i * 3] as usize * 2],
+                    value.uv[value.indice[i * 3] as usize * 2 + 1],
+                ),
+                (
+                    value.uv[value.indice[i * 3 + 1] as usize * 2],
+                    value.uv[value.indice[i * 3 + 1] as usize * 2 + 1],
+                ),
+                (
+                    value.uv[value.indice[i * 3 + 2] as usize * 2],
+                    value.uv[value.indice[i * 3 + 2] as usize * 2 + 1],
+                ),
             ];
-            let render_object = RenderObject::new(positions, uvs, &texture);
-            self.draw_triangle(positions, &render_object);
+            let mut render_object = RenderObject::new(positions, uvs, zs, &texture);
+            self.draw_triangle(&positions, &mut render_object);
         }
     }
 
@@ -91,7 +115,7 @@ impl Context {
         self.ctx.put_image_data(&data, 0., 0.)
     }
 
-    fn draw_triangle(&mut self, points: [(f64, f64); 3], renderobject: &RenderObject) {
+    fn draw_triangle(&mut self, points: &[(f64, f64); 3], renderobject: &mut RenderObject) {
         for i in 0..3 {
             if points[i].1 == points[(i + 1) % 3].1 {
                 self.draw_horizen_triangle(
@@ -148,7 +172,7 @@ impl Context {
         x1: f64,
         x2: f64,
         y: f64,
-        renderobject: &RenderObject,
+        renderobject: &mut RenderObject,
     ) {
         let point_x = (point.0 + 0.5) as i32;
         let point_y = (point.1 + 0.5) as i32;
@@ -177,7 +201,7 @@ impl Context {
         }
     }
 
-    fn draw_horizenline(&mut self, x1: f64, x2: f64, y: u32, renderobject: &RenderObject) {
+    fn draw_horizenline(&mut self, x1: f64, x2: f64, y: u32, renderobject: &mut RenderObject) {
         let (start, end) = if x1 < x2 {
             (x1 as i32, x2 as i32)
         } else {
@@ -190,11 +214,16 @@ impl Context {
         }
     }
 
-    fn draw_point(&mut self, col: u32, row: u32, renderobject: &RenderObject) {
-        let (r, g, b, a) = renderobject.tex((col as f64 + 0.5, row as f64 + 0.5));
-        self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = r;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = g;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = b;
-        self.render_buffer[((row * self.canvas_width + col) * 4 + 3) as usize] = a;
+    fn draw_point(&mut self, col: u32, row: u32, renderobject: &mut RenderObject) {
+        renderobject.active((col as f64 + 0.5, row as f64 + 0.5));
+        let z = renderobject.z();
+        if z < self.depth_buffer[(row * self.canvas_width + col) as usize] {
+            self.depth_buffer[(row * self.canvas_width + col) as usize] = z;
+            let (r, g, b, a) = renderobject.tex();
+            self.render_buffer[((row * self.canvas_width + col) * 4) as usize] = r;
+            self.render_buffer[((row * self.canvas_width + col) * 4 + 1) as usize] = g;
+            self.render_buffer[((row * self.canvas_width + col) * 4 + 2) as usize] = b;
+            self.render_buffer[((row * self.canvas_width + col) * 4 + 3) as usize] = a;
+        }
     }
 }
